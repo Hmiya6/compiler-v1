@@ -16,7 +16,6 @@ pub fn strtou<I: Iterator<Item = char>>(iter: &mut Peekable<I>) -> usize {
 }
 
 
-
 pub struct Consumer {
     queue: Vec<char>,
     pos: usize,
@@ -63,6 +62,30 @@ impl Consumer {
         let res = vec.into_iter().collect::<String>();
         Some(res)
 
+    }
+
+    pub fn next_until_space(&mut self) -> Option<String> {
+        let mut vec = Vec::new();
+        loop {
+            match self.peek_char() {
+                Some(c) => {
+                    match c {
+                        ' ' | '\t' => {
+                            break;
+                        }
+                        _ => {
+                            self.next();
+                            vec.push(c)
+                        }
+                    }
+                },
+                None => {
+                    break;
+                }
+            }
+        }
+        let res = vec.into_iter().collect::<String>();
+        Some(res)
     }
 
     pub fn peek(&self) -> Option<String> {
@@ -152,9 +175,6 @@ impl Consumer {
         }
     }
 
-    // pub fn next_until_space(&mut self) -> Option<String> {
-    //
-    // }
 }
 
 
@@ -177,6 +197,20 @@ mod tests {
         assert_eq!(con.next_n(3), Some(String::from("ons")));
         assert_eq!(con.next_n(1000), None);
         assert_eq!(con.next(), None);
+    }
+
+    #[test]
+    fn consumer_next_until_space() {
+        let mut con = Consumer::new("This is a pen.\t Say hi.");
+        assert_eq!(con.next_until_space(), Some(String::from("This")));
+        con.skip_space();
+        assert_eq!(con.next_until_space(), Some(String::from("is")));
+        con.skip_space();
+        assert_eq!(con.next_until_space(), Some(String::from("a")));
+        con.skip_space();
+        assert_eq!(con.next_until_space(), Some(String::from("pen.")));
+        con.skip_space();
+        assert_eq!(con.next_until_space(), Some(String::from("Say")));
     }
 
     #[test]
