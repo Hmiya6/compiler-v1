@@ -95,7 +95,11 @@ impl<'a> Input<'a> {
                             self.input.next();
                             if *self.input.peek().unwrap() == '=' {
                                 self.input.next();
-                                node = Node::new(NodeKind::Op("==".to_string()), Node::link(node), Node::link(self.relational()));
+                                node = Node::new(
+                                    NodeKind::Op("==".to_string()), 
+                                    Node::link(node), 
+                                    Node::link(self.relational()),
+                                );
                             } else {
                                 panic!("invalid operator `=`, expected `==`");
                             }
@@ -104,13 +108,16 @@ impl<'a> Input<'a> {
                             self.input.next();
                             if *self.input.peek().unwrap() == '=' {
                                 self.input.next();
-                                node = Node::new(NodeKind::Op("!=".to_string()), Node::link(node), Node::link(self.relational()));
+                                node = Node::new(
+                                    NodeKind::Op("!=".to_string()), 
+                                    Node::link(node), 
+                                    Node::link(self.relational()),
+                                );
                             } else {
                                 panic!("invalid operator `!`, expected `!=`");
                             }
                         }
                         _ => {
-                            // panic!("invalid oparator {}, expected `==` or `!=`", c);
                             return node;
                         }
                     }
@@ -136,9 +143,17 @@ impl<'a> Input<'a> {
                             self.input.next();
                             if *self.input.peek().unwrap() == '=' {
                                 self.input.next();
-                                node = Node::new(NodeKind::Op("<=".to_string()), Node::link(node), Node::link(self.add()));
+                                node = Node::new(
+                                    NodeKind::Op("<=".to_string()), 
+                                    Node::link(node), 
+                                    Node::link(self.add()),
+                                );
                             } else {
-                                node = Node::new(NodeKind::Op("<".to_string()), Node::link(node), Node::link(self.add()));
+                                node = Node::new(
+                                    NodeKind::Op("<".to_string()), 
+                                    Node::link(node), 
+                                    Node::link(self.add()),
+                                );
                             }
                         }
                         '>' => {
@@ -146,9 +161,17 @@ impl<'a> Input<'a> {
                             // instead of A > B, implement B < A
                             if *self.input.peek().unwrap() == '=' {
                                 self.input.next();
-                                node = Node::new(NodeKind::Op("<=".to_string()), Node::link(self.add()), Node::link(node));
+                                node = Node::new(
+                                    NodeKind::Op("<=".to_string()), 
+                                    Node::link(self.add()), 
+                                    Node::link(node),
+                                );
                             } else {
-                                node = Node::new(NodeKind::Op("<".to_string()), Node::link(self.add()), Node::link(node));
+                                node = Node::new(
+                                    NodeKind::Op("<".to_string()), 
+                                    Node::link(self.add()), 
+                                    Node::link(node),
+                                );
                             }
                         }
                         _ => {
@@ -176,14 +199,21 @@ impl<'a> Input<'a> {
                     match c {
                         '+' => {
                             self.input.next();
-                            node = Node::new(NodeKind::Op("+".to_string()), Node::link(node), Node::link(self.mul()));
+                            node = Node::new(
+                                NodeKind::Op("+".to_string()), 
+                                Node::link(node), 
+                                Node::link(self.mul()),
+                            );
                         },
                         '-' => {
                             self.input.next();
-                            node = Node::new(NodeKind::Op("-".to_string()), Node::link(node), Node::link(self.mul()));
+                            node = Node::new(
+                                NodeKind::Op("-".to_string()), 
+                                Node::link(node), 
+                                Node::link(self.mul()),
+                            );
                         },
                         _ => {
-                            // panic!("Invalid Operator: {}, expected `+` or `-`", c);
                             return node;
                         },
                     }
@@ -208,12 +238,20 @@ impl<'a> Input<'a> {
                     match c {
                         '*' => {
                             self.input.next();
-                            node = Node::new(NodeKind::Op("*".to_string()), Node::link(node), Node::link(self.unary()));
+                            node = Node::new(
+                                NodeKind::Op("*".to_string()), 
+                                Node::link(node), 
+                                Node::link(self.unary()),
+                            );
                             
                         },
                         '/' => {
                             self.input.next();
-                            node = Node::new(NodeKind::Op("/".to_string()), Node::link(node), Node::link(self.unary()));
+                            node = Node::new(
+                                NodeKind::Op("/".to_string()), 
+                                Node::link(node), 
+                                Node::link(self.unary()),
+                                );
                         },
                         _ => {
                             return node;
@@ -241,7 +279,11 @@ impl<'a> Input<'a> {
                     '-' => {
                         self.input.next();
                         // returns 0 - primary
-                        return Node::new(NodeKind::Op("-".to_string()), Node::link(Node::new(NodeKind::Num(0), None, None)), Node::link(self.primary()));
+                        return Node::new(
+                            NodeKind::Op("-".to_string()), 
+                            Node::link(Node::new(NodeKind::Num(0), None, None)),
+                            Node::link(self.primary()),
+                        );
                     },
                     _ => {
                         return self.primary();
@@ -264,7 +306,11 @@ impl<'a> Input<'a> {
                     '0'..='9' => {
                         let num = strtou(&mut self.input);
                         // println!("digit: {}", num);
-                        let node = Node::new(NodeKind::Num(num), None, None);
+                        let node = Node::new(
+                            NodeKind::Num(num), 
+                            None,
+                            None,
+                        );
                         return node;
                     },
                     '(' => {
@@ -430,7 +476,6 @@ fn main() {
     }
 
     // compile
-    // compile(&args[1]);
     let mut compiler = Compiler::from_str(&args[1]);
     compiler.compile();
 }
@@ -440,66 +485,29 @@ mod tests {
     use super::*;
     #[test]
     fn test_node() {
-        let node = test_tokenize("1*(2+3)");
-        print_node(&node);
-        println!("-------------");
-        
+        test_tokenize("1*(2+3)");
         test_tokenize("1 + 20+ 4");
         test_tokenize(" 9- 6 * 10");
-        
-        let node = test_tokenize("1-10/100 +1000 * 10000");
-        print_node(&node);
-        println!("-------------");
-        
-        let node = test_tokenize("((2-20)*200 + 2000)*(21 - 201)");
-        print_node(&node);
-        println!("-------------");
-
-        let node = test_tokenize("((100 + 100)* 10) + 100");
-        print_node(&node);
-        println!("-------------");
-
-        let node = test_tokenize("1 == 1");
-        print_node(&node);
-        println!("-------------");
-        
-        let node = test_tokenize("1 != 1");
-        print_node(&node);
-        println!("-------------");
-
-        let node = test_tokenize("1 <= 1");
-        print_node(&node);
-        println!("-------------");
-
-        let node = test_tokenize("1 >= 1");
-        print_node(&node);
-        println!("-------------");
-
-        let node = test_tokenize("1 < 1");
-        print_node(&node);
-        println!("-------------");
-
-        let node = test_tokenize("1 > 1");
-        print_node(&node);
-        println!("-------------");
-
-        let node = test_tokenize("1 == 1 == 1");
-        print_node(&node);
-        println!("-------------");
-
-        let node = test_tokenize("1 > 1 > 1");
-        print_node(&node);
-        println!("-------------");
+        test_tokenize("1-10/100 +1000 * 10000");
+        test_tokenize("((2-20)*200 + 2000)*(21 - 201)");
+        test_tokenize("((100 + 100)* 10) + 100");
+        test_tokenize("1 == 1");
+        test_tokenize("1 != 1");
+        test_tokenize("1 <= 1");
+        test_tokenize("1 >= 1");
+        test_tokenize("1 < 1");
+        test_tokenize("1 > 1");
+        test_tokenize("1 == 1 == 1");
+        test_tokenize("1 > 1 > 1");
     }
     
     #[test]
     fn test_compile() {
-        compile("((100 + 100)* 10) + 100");
-        compile("-5");
-        compile("123 +  (  + 33 - 99 )* 24");
-        compile("123 > 122");
-        compile("42 == 43");
-
+        Compiler::from_str("((100 + 100)* 10) + 100").compile();
+        Compiler::from_str("-5").compile();
+        Compiler::from_str("123 +  (  + 33 - 99 )* 24").compile();
+        Compiler::from_str("123 > 122").compile();
+        Compiler::from_str("42 == 43").compile();
     }
 
     fn print_node(node: &Node) {
@@ -513,10 +521,11 @@ mod tests {
         }
     }
 
-    fn test_tokenize(s: &str) -> Node {
+    fn test_tokenize(s: &str) {
         let mut input = Input::new(s);
         let head = input.tokenize();
-        head
+        print_node(&head);
+        println!("------------");
     }
 }
 
