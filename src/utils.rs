@@ -188,6 +188,7 @@ mod tests {
         consumer_peek();
         consumer_to_usize();
         consumer_skip_space();
+        consumer_next_until_space();
     }
 
     #[test]
