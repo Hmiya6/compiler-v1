@@ -3,6 +3,7 @@
 pub enum NodeKind {
     Op(String),
     Num(usize),
+    LVar(String),
 }
 
 type Link = Option<Box<Node>>;

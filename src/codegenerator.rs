@@ -22,7 +22,9 @@ impl CodeGenerator {
 
     pub fn from_str(s: &str) -> Self {
         let mut input = Input::new(s);
-        let head = input.tokenize();
+        let mut nodes = input.tokenize();
+        // TODO
+        let head = nodes.pop().unwrap();
         Self {
             head: Some(head),
         }
@@ -93,14 +95,39 @@ impl CodeGenerator {
                         println!("    setle al");
                         println!("    movzb rax, al");
                     },
+                    "=" => {
+
+                    },
                     _ => {
                         panic!("compile error");
                     }
                 }
                 println!("    push rax");
                 return;
+            },
+            NodeKind::LVar(ident) => {
+                
             }
         }
     }
 
 }
+
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn test_compile() {
+        CodeGenerator::from_str("((100 + 100)* 10) + 100").compile();
+        CodeGenerator::from_str("-5").compile();
+        CodeGenerator::from_str("123 +  (  + 33 - 99 )* 24").compile();
+        CodeGenerator::from_str("123 > 122").compile();
+        CodeGenerator::from_str("42 == 43").compile();
+    }
+
+}
+
+

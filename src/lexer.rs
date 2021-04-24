@@ -4,19 +4,27 @@ use std::str::Chars;
 use crate::node::{Node, NodeKind};
 use crate::utils::strtou;
 
-
 /*
-Grammer
 
-expr = equality
+program = stmt*
+stmt = expr ";"
+expr = assign
+assign = equality ("=" assign)?
 equality = relational ("==" relational | "!=" relational)*
 relational = add ("<" add | "<=" add | ">" add | ">=" add)*
 add = mul ("+" mul | "-" mul)*
 mul = unary ("*" unary | "/" unary)*
-unary = ('+' | '-')? primary
-primary = num | "(" expr ")"
+unary = ("+" | "-")? primary
+primary = num | ident | "(" expr ")"
 
 */
+
+
+//TODO
+// original Input
+// 1. peek(n)
+// 2. next(n)
+// 3. inputtou(&mut Input)
 
 // Input makes node tree from string
 pub struct Input<'a> {
@@ -29,8 +37,8 @@ impl<'a> Input<'a> {
         Self {input: iter}
     }
 
-    pub fn tokenize(&mut self) -> Node {
-        let head_node = self.expr();
+    pub fn tokenize(&mut self) -> Vec<Node> {
+        let head_node = self.program();
         head_node
     }
 
@@ -48,17 +56,76 @@ impl<'a> Input<'a> {
             }
         }
     }
-    
-    // expr = equality
-    fn expr(&mut self) -> Node {
-        // println!("expr");
+
+    // program = stmt*
+    fn program(&mut self) -> Vec<Node> {
+        let mut program = Vec::new();
+        loop {
+            self.skip_space();
+            let mut stmt = self.stmt();
+            program.push(stmt);
+            self.skip_space();
+            if self.input.peek().is_none() {
+                break;
+            }
+        }
+        program
+    }
+
+    // stmt = expr ";"
+    fn stmt(&mut self) -> Node {
         self.skip_space();
-        self.equality()
+        let expr = self.expr();
+        self.skip_space();
+        match self.input.peek() {
+            Some(&c) => {
+                if c == ';' {
+                    self.input.next();
+                    expr
+                } else {
+                    panic!("expected `;`, but found `{}`", c);
+                }
+            },
+            None => {
+                expr
+            }
+        }
+    }
+
+    // expr = assign
+    fn expr(&mut self) -> Node {
+        self.skip_space();
+        self.assign()
+    }
+
+    // assign = equality ("=" assign)?
+    fn assign(&mut self) -> Node {
+        self.skip_space();
+        let mut node = self.equality();
+        self.skip_space();
+        match self.input.peek() {
+            Some(&c) => {
+                if c == '=' {
+                    self.input.next();
+                    Node::new(
+                        NodeKind::Op("=".to_string()),
+                        Node::link(node),
+                        Node::link(self.assign()),
+                    )
+                } else {
+                    node
+                    // panic!("expected `=`, but found `{}`", c);
+                }
+            },
+            None => {
+                node
+            }
+        }
+
     }
     
     // equality = relational ("==" relational | "!=" relational)*
     fn equality(&mut self) -> Node {
-        // println!("equality");
         let mut node = self.relational();
 
         loop {
@@ -76,7 +143,7 @@ impl<'a> Input<'a> {
                                     Node::link(self.relational()),
                                 );
                             } else {
-                                panic!("invalid operator `=`, expected `==`");
+                                // panic!("invalid operator `=`, expected `==`");
                             }
                         },
                         '!' => {
@@ -106,7 +173,6 @@ impl<'a> Input<'a> {
     
     // relational = add ("<" add | "<=" add | ">" add | ">=" add)*
     fn relational(&mut self) -> Node {
-        // println!("relational");
         let mut node = self.add();
 
         loop {
@@ -164,7 +230,6 @@ impl<'a> Input<'a> {
     
     // add = mul ('+' mul | '-' mul)*
     fn add(&mut self) -> Node {
-        // println!("add");
         let mut node = self.mul();
 
         loop {
@@ -203,7 +268,6 @@ impl<'a> Input<'a> {
     
     // mul = uary ('*' unary | '/' uary)*
     fn mul(&mut self) -> Node {
-        // println!("mul");
         let mut node = self.unary();
 
         loop {
@@ -242,7 +306,6 @@ impl<'a> Input<'a> {
 
     // unary = ('+' | '-')? primary
     fn unary(&mut self) -> Node {
-        // println!("unary");
         self.skip_space();
         match self.input.peek() {
             Some(&c) => {
@@ -271,9 +334,8 @@ impl<'a> Input<'a> {
         }
     }
     
-    // primary = num | '(' expr ')'
+    // primary = num | ident | '(' expr ')'
     fn primary(&mut self) -> Node {
-        // println!("primary");
         self.skip_space();
         match self.input.peek() {
             Some(&c) => {
@@ -299,6 +361,17 @@ impl<'a> Input<'a> {
                         }
                         return node;
                     },
+                    'a'..='z' => {
+                        // println!("variable!");
+                        self.input.next();
+                        let ident = c;
+                        let node = Node::new(
+                            NodeKind::LVar(ident.to_string()),
+                            None,
+                            None,
+                        );
+                        return node;
+                    },
                     _ => {
                         panic!("Invalid number: {}", c);
                     }
@@ -310,3 +383,50 @@ impl<'a> Input<'a> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_node() {
+        test_tokenize("1*(2+3);");
+        test_tokenize("1 + 20+ 4;");
+        test_tokenize(" 9- 6 * 10;");
+        test_tokenize("1-10/100 +1000 * 10000;");
+        test_tokenize("((2-20)*200 + 2000)*(21 - 201);");
+        test_tokenize("((100 + 100)* 10) + 100;");
+        test_tokenize("1 == 1;");
+        test_tokenize("1 != 1;");
+        test_tokenize("1 <= 1;");
+        test_tokenize("1 >= 1;");
+        test_tokenize("1 < 1;");
+        test_tokenize("1 > 1;");
+        test_tokenize("1 == 1 == 1;");
+        test_tokenize("1 > 1 > 1;");
+        test_tokenize("a = 1;");
+        test_tokenize("a = 1 + 3;");
+        test_tokenize("a = b * 3 - p;");
+    }
+    
+
+    fn print_node(node: &Node) {
+        println!("{:?}", node.kind);
+        if let Some(n) = &node.lhs {
+            print_node(n);
+        }
+        
+        if let Some(n) = &node.rhs {
+            print_node(n);
+        }
+    }
+
+    fn test_tokenize(s: &str) {
+        let mut input = Input::new(s);
+        let head = input.tokenize();
+        for h in head {
+            print_node(&h);
+        }
+        println!("------------");
+    }
+}
+
