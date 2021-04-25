@@ -17,8 +17,10 @@ fn main() {
     }
 
     // compile
+    /*
     let mut compiler = CodeGenerator::from_str(&args[1]);
     compiler.compile();
+    */
 }
 
 

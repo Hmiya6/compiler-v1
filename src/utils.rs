@@ -1,21 +1,9 @@
-use std::iter::{Iterator, Peekable};
 
-pub fn strtou<I: Iterator<Item = char>>(iter: &mut Peekable<I>) -> usize {
-    let mut result: usize = 0;
-    loop {
-        match iter.peek() {
-            Some(c) => match c.to_digit(10) {
-                Some(i) => result = result * 10 + i as usize,
-                None => break,
-            },
-            None => break,
-        }
-        iter.next();
-    }
-    result
-}
+// TODO
+// - if no problem to return &str insted of String, remove to_string-like functions
 
-
+// `Iter`-like structure.
+// It only deal with &str (Vec<char>) (, so that we can build code simply).
 pub struct Consumer {
     queue: Vec<char>,
     pos: usize,
@@ -30,7 +18,8 @@ impl Consumer {
             pos: 0,
         }
     }
-
+    
+    // Return next char as `String`.
     pub fn next(&mut self) -> Option<String> {
         if let Some(c) = self.next_char() {
             Some(c.to_string())
@@ -38,18 +27,20 @@ impl Consumer {
             None
         }
     }
-
+    
+    // Inner function for `next` and `next_n`
+    // Return next char if `self.queue` has the next element,
     fn next_char(&mut self) -> Option<char> {
-        let res: char;
         if self.pos < self.queue.len() {
-            res = self.queue[self.pos];
+            let res = self.queue[self.pos];
             self.pos +=1;
             Some(res)
         } else {
             None
         }
     }
-
+    
+    // return next n chars as `String`
     pub fn next_n(&mut self, n: usize) -> Option<String> {
         let mut vec = Vec::new();
         for _ in 0..n {
@@ -63,7 +54,8 @@ impl Consumer {
         Some(res)
 
     }
-
+    
+    // return string from `self.pos` to next white space
     pub fn next_until_space(&mut self) -> Option<String> {
         let mut vec = Vec::new();
         loop {
@@ -87,7 +79,8 @@ impl Consumer {
         let res = vec.into_iter().collect::<String>();
         Some(res)
     }
-
+    
+    // return a char as `String`
     pub fn peek(&self) -> Option<String> {
         if let Some(c) = self.peek_char() {
             Some(c.to_string())
@@ -96,7 +89,8 @@ impl Consumer {
         }
 
     }
-
+    
+    // inner function for mainly `peek` and `peek_n`
     fn peek_char(&self) -> Option<char> {
         let res: char;
         if self.pos < self.queue.len() {
@@ -106,7 +100,8 @@ impl Consumer {
             None
         }
     }
-
+    
+    // return chars as `String`
     pub fn peek_n(&self, n: usize) -> Option<String> {
         let mut vec = Vec::new();
         for i in 0..n {
@@ -116,10 +111,11 @@ impl Consumer {
                 return None;
             }
         }
-        let res = vec.into_iter().collect::<String>();
+        let res = vec.iter().collect::<String>();
         Some(res)
     }
     
+    // return `usize` integer
     pub fn to_usize(&mut self) -> Option<usize> {
         let mut result: usize = 0;
 
@@ -160,7 +156,8 @@ impl Consumer {
         }
         return Some(result);
     }
-
+    
+    // skip white spaces
     pub fn skip_space(&mut self) {
         loop {
             if let Some(c) = self.peek_char() {
@@ -194,8 +191,8 @@ mod tests {
     #[test]
     fn consumer_next() {
         let mut con = Consumer::new("consumer");
-        assert_eq!(con.next(), Some(String::from("c")));
-        assert_eq!(con.next_n(3), Some(String::from("ons")));
+        assert_eq!(con.next(), Some("c".to_string()));
+        assert_eq!(con.next_n(3), Some("ons".to_string()));
         assert_eq!(con.next_n(1000), None);
         assert_eq!(con.next(), None);
     }
@@ -203,24 +200,24 @@ mod tests {
     #[test]
     fn consumer_next_until_space() {
         let mut con = Consumer::new("This is a pen.\t Say hi.");
-        assert_eq!(con.next_until_space(), Some(String::from("This")));
+        assert_eq!(con.next_until_space(), Some("This".to_string()));
         con.skip_space();
-        assert_eq!(con.next_until_space(), Some(String::from("is")));
+        assert_eq!(con.next_until_space(), Some("is".to_string()));
         con.skip_space();
-        assert_eq!(con.next_until_space(), Some(String::from("a")));
+        assert_eq!(con.next_until_space(), Some("a".to_string()));
         con.skip_space();
-        assert_eq!(con.next_until_space(), Some(String::from("pen.")));
+        assert_eq!(con.next_until_space(), Some("pen.".to_string()));
         con.skip_space();
-        assert_eq!(con.next_until_space(), Some(String::from("Say")));
+        assert_eq!(con.next_until_space(), Some("Say".to_string()));
     }
 
     #[test]
     fn consumer_peek() {
         let mut con = Consumer::new("Hello people");
-        assert_eq!(con.peek(), Some(String::from("H")));
-        assert_eq!(con.next_n(4), Some(String::from("Hell")));
+        assert_eq!(con.peek(), Some("H".to_string()));
+        assert_eq!(con.next_n(4), Some("Hell".to_string()));
         assert_eq!(con.peek_n(1000), None);
-        assert_eq!(con.peek_n(8), Some(String::from("o people")));
+        assert_eq!(con.peek_n(8), Some("o people".to_string()));
     }
     
     #[test]
@@ -237,9 +234,9 @@ mod tests {
     fn consumer_skip_space() {
         let mut con = Consumer::new("  \t  konnichwassup   ");
         con.skip_space();
-        assert_eq!(con.peek(), Some(String::from("k")));
+        assert_eq!(con.peek(), Some("k".to_string()));
         con.skip_space();
-        assert_eq!(con.next_n(13), Some(String::from("konnichwassup")));
+        assert_eq!(con.next_n(13), Some("konnichwassup".to_string()));
         con.skip_space();
         assert_eq!(con.peek(), None);
 
