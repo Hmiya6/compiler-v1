@@ -35,22 +35,22 @@ impl CodeGenerator {
         println!(".global main");
         println!("main:");
         if let Some(head) = Option::take(&mut self.head) {
-            Self::gen(head);
+            Self::gen(&head);
             println!("    pop rax");
         }
         println!("    ret");
     }
 
-    fn gen(node: Node) {
+    fn gen(node: &Node) {
 
-        if let Some(child) = node.lhs {
-            Self::gen(*child);
+        if let Some(child) = node.lhs() {
+            Self::gen(child);
         }
-        if let Some(child) = node.rhs {
-            Self::gen(*child);
+        if let Some(child) = node.rhs() {
+            Self::gen(child);
         }
         
-        match node.kind {
+        match node.kind() {
             NodeKind::Num(n) => {
                 println!("    push {}", n);
                 return;
@@ -58,7 +58,7 @@ impl CodeGenerator {
             NodeKind::Op(op) => {
                 println!("    pop rdi");
                 println!("    pop rax");
-                match &*op {
+                match op as &str {
                     "+" => {
                         println!("    add rax, rdi");
                     },

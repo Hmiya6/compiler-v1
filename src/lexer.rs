@@ -120,7 +120,7 @@ impl Input {
             self.input.skip_space();
             match self.input.peek_n(2) {
                 Some(s) => {
-                    match &*s {
+                    match &s as &str {
                         "==" => {
                             self.input.next_n(2);
                             node = Node::new(
@@ -157,7 +157,7 @@ impl Input {
             self.input.skip_space();
             match self.input.peek() {
                 Some(s) => {
-                    match &*s {
+                    match &s as &str {
                         "<" => {
                             self.input.next();
                             if self.input.peek().unwrap() == "=" {
@@ -214,7 +214,7 @@ impl Input {
             self.input.skip_space();
             match self.input.peek() {
                 Some(s) => {
-                    match &*s {
+                    match &s as &str {
                         "+" => {
                             self.input.next();
                             node = Node::new(
@@ -252,7 +252,7 @@ impl Input {
             self.input.skip_space();
             match self.input.peek() {
                 Some(s) => {
-                    match &*s {
+                    match &s as &str {
                         "*" => {
                             self.input.next();
                             node = Node::new(
@@ -287,7 +287,7 @@ impl Input {
         self.input.skip_space();
         match self.input.peek() {
             Some(s) => {
-                match &*s {
+                match &s as &str {
                     "+" => {
                         self.input.next();
                         return self.primary();
@@ -337,6 +337,7 @@ impl Input {
                     return node;
                 }
                 if s.chars().all(|c| char::is_alphabetic(c)) {
+                    self.input.next();
                     let ident = s;
                     return Node::new(
                         NodeKind::LVar(ident.to_string()),
@@ -379,12 +380,12 @@ mod tests {
     
 
     fn print_node(node: &Node) {
-        println!("{:?}", node.kind);
-        if let Some(n) = &node.lhs {
+        println!("{:?}", node.kind());
+        if let Some(n) = node.lhs() {
             print_node(n);
         }
         
-        if let Some(n) = &node.rhs {
+        if let Some(n) = node.rhs() {
             print_node(n);
         }
     }
